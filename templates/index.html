@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .todo-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: calc(100% - 110px);
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background: #5c6bc0;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #3949ab;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        li {
+            background: #f9f9f9;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .remove-button {
+            padding: 5px 10px;
+            font-size: 14px;
+            border: none;
+            background: #e53935;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .remove-button:hover {
+            background: #c62828;
+        }
+        .developer-label {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="todo-container">
+        <h1>To-Do List</h1>
+        <input type="text" id="todoInput" placeholder="Add a new to-do item">
+        <button onclick="addTodo()">Add</button>
+        <ul id="todoList"></ul>
+        <div class="developer-label">Developed by: Habiba, Rimsha & Zobia</div>
+    </div>
+
+    <script>
+        function fetchTodos() {
+            fetch('/items')
+                .then(response => response.json())
+                .then(data => {
+                    const todoList = document.getElementById('todoList');
+                    todoList.innerHTML = '';
+                    data.items.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item;
+
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove';
+                        removeButton.className = 'remove-button';
+                        removeButton.onclick = function() {
+                            removeTodo(item);
+                        };
+
+                        li.appendChild(removeButton);
+                        todoList.appendChild(li);
+                    });
+                });
+        }
+
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const item = input.value;
+
+            if (item) {
+                fetch('/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'item=' + encodeURIComponent(item)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.items) {
+                        fetchTodos();
+                        input.value = '';
+                    } else {
+                        alert(data.error);
+                    }
+                });
+            } else {
+                alert('Please enter a to-do item.');
+            }
+        }
+
+        function removeTodo(item) {
+            fetch('/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'item=' + encodeURIComponent(item)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.items) {
+                    fetchTodos();
+                } else {
+                    alert(data.error);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchTodos);
+    </script>
+</body>
+</html>
